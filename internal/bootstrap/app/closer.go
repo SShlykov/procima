@@ -8,6 +8,8 @@ import (
 func (app *App) closer(ctx context.Context, stoppedChan <-chan struct{}) error {
 	<-ctx.Done()
 
+	app.logger.Info("Остановка приложения")
+
 	timeoutCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 

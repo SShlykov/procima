@@ -2,12 +2,12 @@ package app
 
 import (
 	"context"
+	"github.com/SShlykov/procima/internal/bootstrap/registry"
 	configPkg "github.com/SShlykov/procima/internal/config"
 	loggerPkg "github.com/SShlykov/procima/pkg/logger"
 	"os/signal"
 	"sync"
 	"syscall"
-	"time"
 )
 
 type App struct {
@@ -52,8 +52,13 @@ func (app *App) Run() error {
 	go func() {
 		defer wg.Done()
 		defer app.cancel()
-		defer app.logger.Info(" остановлен")
-		time.Sleep(10 * time.Second)
+		defer app.logger.Info(app.config.AppName + " остановлен")
+		server, err := registry.InitWebServer(app.ctx, app.logger, app.configPath)
+		if err != nil {
+			app.logger.Error("failed to init web server", loggerPkg.Err(err))
+			return
+		}
+		_ = server.Run(ctx, app.logger)
 	}()
 
 	go func() {

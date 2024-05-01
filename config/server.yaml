@@ -1,0 +1,10 @@
+addr: "0.0.0.0:8080"
+
+timeout: 4s
+read_timeout: 4s
+write_timeout: 4s
+read_header_timeout: 4s
+iddle_timeout: 60s
+
+cors_enabled: true
+swagger_enabled: true
