@@ -11,7 +11,7 @@ func main() {
 	var configPath string
 	flag.StringVar(&configPath, "config", "./config", "path to configuration file")
 
-	app, err := appPkg.New()
+	app, err := appPkg.New(configPath)
 	if err != nil {
 		fmt.Printf("failed to create app: %s\n", err.Error())
 		os.Exit(2)

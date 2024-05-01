@@ -45,7 +45,7 @@ func (app *App) Run() error {
 	var wg sync.WaitGroup
 	stoppedChan := make(chan struct{})
 
-	app.logger.Info("запуск приложения", loggerPkg.Any("на", app.config))
+	app.logger.Info("запуск приложения", loggerPkg.Any("cfg", app.config))
 	app.logger.Debug("включены отладочные сообщения")
 
 	wg.Add(1)
@@ -53,7 +53,7 @@ func (app *App) Run() error {
 		defer wg.Done()
 		defer app.cancel()
 		defer app.logger.Info(" остановлен")
-		time.Sleep(10000)
+		time.Sleep(10 * time.Second)
 	}()
 
 	go func() {

@@ -5,7 +5,8 @@ import (
 )
 
 type Config struct {
-	Logger Logger `mapstructure:"logger" yaml:"logger"`
+	AppName string `mapstructure:"app_name" yaml:"app_name"`
+	Logger  Logger `mapstructure:"logger" yaml:"logger"`
 }
 type Logger struct {
 	Level string `mapstructure:"level" yaml:"level"`
@@ -15,17 +16,16 @@ func LoadConfig(configPath string) (*Config, error) {
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
 	viper.AddConfigPath(configPath)
+	viper.AutomaticEnv()
 
 	if err := viper.ReadInConfig(); err != nil {
 		return nil, err
 	}
 
-	viper.AutomaticEnv()
-
 	config := &Config{}
 
 	if err := viper.Unmarshal(config); err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	return config, nil

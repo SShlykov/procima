@@ -1,0 +1,4 @@
+app_name: "procima"
+
+logger:
+  level: debug
