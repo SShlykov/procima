@@ -51,7 +51,7 @@ func SetRouter(engine *gin.Engine, logger loggerPkg.Logger) {
 }
 
 func initImageController(logger loggerPkg.Logger) cntr.ImageController {
-	service := domain.NewImageService()
+	service := domain.NewImageService(logger)
 	controller := cntr.NewImageController(service, logger)
 	return controller
 }

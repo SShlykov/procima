@@ -2,12 +2,12 @@ package controller
 
 import (
 	"context"
-	"fmt"
 	loggerPkg "github.com/SShlykov/procima/go_pkg/logger"
 	"github.com/SShlykov/procima/procima/internal/integration/http/v1/errors"
 	"github.com/SShlykov/procima/procima/internal/models"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"regexp"
 )
 
 type ImageController interface {
@@ -37,6 +37,12 @@ func (ic *imageController) ProcessImage(c *gin.Context) {
 		return
 	}
 
+	if !validateImage(request.Image) {
+		ic.logger.Error(errors.ErrorBadRequest, loggerPkg.String("error", "invalid image"))
+		c.JSON(http.StatusBadRequest, gin.H{"error": errors.ErrorBadRequest})
+		return
+	}
+
 	image, err := ic.service.ProcessImage(ctx, request)
 	if err != nil {
 		ic.logger.Error("error", loggerPkg.Err(err))
@@ -44,6 +50,16 @@ func (ic *imageController) ProcessImage(c *gin.Context) {
 		return
 	}
 
-	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", image.Name))
-	c.Data(200, "application/octet-stream", image.Data)
+	//c.Writer.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", image.Name))
+	c.Writer.Header().Set("Content-Type", "image/jpeg")
+	c.Writer.Header().Set("Content-Disposition", "inline")
+	_, _ = c.Writer.Write(image.Data)
+}
+
+func validateImage(image string) bool {
+	isMatched, err := regexp.Match(`^data:image/(jpeg);base64,`, []byte(image))
+	if err != nil || !isMatched {
+		return false
+	}
+	return true
 }

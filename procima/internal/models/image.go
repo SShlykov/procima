@@ -4,7 +4,7 @@ type Image struct {
 	Data []byte `json:"data"`
 	Name string `json:"name"`
 }
-type Operation int
+type Operation string
 
 type RequestImage struct {
 	Image      string      `json:"image"`
