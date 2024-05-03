@@ -1,0 +1,22 @@
+version: "3"
+
+services:
+  procima:
+    build:
+      context: .
+      dockerfile: procima/Dockerfile
+    container_name: procima
+    ports:
+      - "8080:8080"
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 400M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "10"
+    tty: true
+    restart: always

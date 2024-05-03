@@ -1,0 +1,7 @@
+app_name: "procima"
+max_file_size: 10485760 # 10MB
+host: 0.0.0.0
+
+logger:
+  level: debug # 'debug', 'info', 'warn', 'error'
+  mode: pretty # 'json' or 'pretty'
