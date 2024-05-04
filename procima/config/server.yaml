@@ -1,4 +1,9 @@
 addr: "0.0.0.0:8080"
+max_file_size: 10485760 # 10MB
+#max_file_size: 104857600 # 100MB
+available_types:
+  - jpeg
+  - jpg
 
 timeout: 4s
 read_timeout: 4s

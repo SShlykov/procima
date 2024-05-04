@@ -5,10 +5,9 @@ import (
 )
 
 type Config struct {
-	AppName     string `mapstructure:"app_name" yaml:"app_name"`
-	MaxFileSize int64  `mapstructure:"max_file_size" yaml:"max_file_size"`
-	Host        string `mapstructure:"host" yaml:"host"`
-	Logger      Logger `mapstructure:"logger" yaml:"logger"`
+	AppName string `mapstructure:"app_name" yaml:"app_name"`
+	Host    string `mapstructure:"host" yaml:"host"`
+	Logger  Logger `mapstructure:"logger" yaml:"logger"`
 }
 type Logger struct {
 	Level string `mapstructure:"level" yaml:"level"`

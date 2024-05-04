@@ -4,7 +4,7 @@ import (
 	"errors"
 	loggerPkg "github.com/SShlykov/procima/go_pkg/logger"
 	"github.com/SShlykov/procima/procima/internal/config"
-	"github.com/SShlykov/procima/procima/internal/domain"
+	"github.com/SShlykov/procima/procima/internal/domain/services"
 	"github.com/SShlykov/procima/procima/internal/integration/http/endpoint"
 	cntr "github.com/SShlykov/procima/procima/internal/integration/http/v1/controller"
 	"github.com/SShlykov/procima/procima/internal/integration/http/v1/router"
@@ -22,7 +22,7 @@ func InitWebServer(logger loggerPkg.Logger, configPath string) (*endpoint.WebSer
 	engine := gin.New()
 	engine.Use(gin.Recovery())
 
-	SetRouter(engine, logger)
+	SetRouter(engine, logger, cfg)
 
 	srv := &http.Server{
 		ReadHeaderTimeout: cfg.ReadHeaderTimeout,
@@ -37,21 +37,21 @@ func InitWebServer(logger loggerPkg.Logger, configPath string) (*endpoint.WebSer
 	return &endpoint.WebServer{Server: srv, Config: cfg}, nil
 }
 
-func SetRouter(engine *gin.Engine, logger loggerPkg.Logger) {
-	imageController := initImageController(logger)
+func SetRouter(engine *gin.Engine, logger loggerPkg.Logger, serverConfig *config.ServerConfig) {
+	imageController := initImageController(logger, serverConfig)
 
-	controllers :=
+	routers :=
 		[]func(engine *gin.Engine, logger loggerPkg.Logger){
 			router.ImageRouter(imageController),
 		}
 
-	for _, controller := range controllers {
-		controller(engine, logger)
+	for _, routes := range routers {
+		routes(engine, logger)
 	}
 }
 
-func initImageController(logger loggerPkg.Logger) cntr.ImageController {
-	service := domain.NewImageService(logger)
-	controller := cntr.NewImageController(service, logger)
+func initImageController(logger loggerPkg.Logger, serverConfig *config.ServerConfig) cntr.ImageController {
+	service := services.NewImageService(logger)
+	controller := cntr.NewImageController(service, logger, serverConfig.AvailableTypes, serverConfig.MaxFileSize)
 	return controller
 }

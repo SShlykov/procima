@@ -2,7 +2,9 @@ package controller
 
 import (
 	"context"
+	errorsPkg "errors"
 	loggerPkg "github.com/SShlykov/procima/go_pkg/logger"
+	"github.com/SShlykov/procima/procima/internal/domain/services"
 	"github.com/SShlykov/procima/procima/internal/integration/http/v1/errors"
 	"github.com/SShlykov/procima/procima/internal/models"
 	"github.com/gin-gonic/gin"
@@ -10,21 +12,29 @@ import (
 	"regexp"
 )
 
+// ImageController контроллер для обработки изображений
+//
+//go:generate mockgen -destination=./mocks/mock_image_controller.go -package=mocks github.com/SShlykov/procima/procima/internal/integration/http/v1/controller ImageController
 type ImageController interface {
 	ProcessImage(c *gin.Context)
 }
 
+// ImageService сервис для обработки изображений
+//
+//go:generate mockgen -destination=./mocks/mock_image_service.go -package=mocks github.com/SShlykov/procima/procima/internal/integration/http/v1/controller ImageService
 type ImageService interface {
 	ProcessImage(ctx context.Context, request models.RequestImage) (*models.Image, error)
 }
 
 type imageController struct {
-	service ImageService
-	logger  loggerPkg.Logger
+	service             ImageService
+	logger              loggerPkg.Logger
+	availableImageTypes []string
+	fileSizeLimit       int
 }
 
-func NewImageController(service ImageService, logger loggerPkg.Logger) ImageController {
-	return &imageController{service: service, logger: logger}
+func NewImageController(service ImageService, logger loggerPkg.Logger, types []string, fileSizeLimit int) ImageController {
+	return &imageController{service: service, logger: logger, availableImageTypes: types, fileSizeLimit: fileSizeLimit}
 }
 
 func (ic *imageController) ProcessImage(c *gin.Context) {
@@ -37,29 +47,53 @@ func (ic *imageController) ProcessImage(c *gin.Context) {
 		return
 	}
 
-	if !validateImage(request.Image) {
-		ic.logger.Error(errors.ErrorBadRequest, loggerPkg.String("error", "invalid image"))
-		c.JSON(http.StatusBadRequest, gin.H{"error": errors.ErrorBadRequest})
+	if len(request.Image) > ic.fileSizeLimit {
+		ic.logger.Error(errors.ErrorBadRequest, loggerPkg.String("error", errors.ErrorExcededFileSize))
+		c.JSON(http.StatusBadRequest, gin.H{"error": errors.ErrorExcededFileSize, "limit": ic.fileSizeLimit, "actual": len(request.Image)})
+		return
+	}
+
+	imageType, found := getImageType(request.Image)
+	if !found || !ic.isAvailable(imageType) {
+		ic.logger.Error(errors.ErrorBadRequest, loggerPkg.String("error", errors.ErrorInvalidImageType))
+		c.JSON(http.StatusBadRequest, gin.H{"error": errors.ErrorInvalidImageType, "available": ic.availableImageTypes, "actual": imageType})
 		return
 	}
 
 	image, err := ic.service.ProcessImage(ctx, request)
 	if err != nil {
 		ic.logger.Error("error", loggerPkg.Err(err))
+		if errorsPkg.Is(err, services.ErrorUnknownOperation) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
 		c.JSON(http.StatusInternalServerError, gin.H{"error": errors.ErrorInternal})
 		return
 	}
 
-	//c.Writer.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", image.Name))
-	c.Writer.Header().Set("Content-Type", "image/jpeg")
-	c.Writer.Header().Set("Content-Disposition", "inline")
+	ic.logger.Info("image processed", loggerPkg.String("type", imageType), loggerPkg.String("name", image.Name), loggerPkg.Int("size", len(image.Data)))
+	c.Writer.Header().Set("Content-Type", "image/"+imageType)
+	//c.Writer.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", image.Name)) // for download
+	c.Writer.Header().Set("Content-Disposition", "inline") // for display
 	_, _ = c.Writer.Write(image.Data)
 }
 
-func validateImage(image string) bool {
-	isMatched, err := regexp.Match(`^data:image/(jpeg);base64,`, []byte(image))
-	if err != nil || !isMatched {
-		return false
+func (ic *imageController) isAvailable(imageType string) bool {
+	for _, t := range ic.availableImageTypes {
+		if t == imageType {
+			return true
+		}
 	}
-	return true
+	return false
+}
+
+func getImageType(dataURL string) (string, bool) {
+	re := regexp.MustCompile(`^data:image/([^;]+);base64,`)
+	matches := re.FindStringSubmatch(dataURL[:50])
+
+	if len(matches) == 2 {
+		return matches[1], true
+	}
+	return "", false
 }

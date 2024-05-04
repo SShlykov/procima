@@ -2,24 +2,22 @@ package adapters
 
 import (
 	"bytes"
-	"fmt"
 	"github.com/SShlykov/procima/procima/internal/models"
 	"image"
 	"image/jpeg"
 )
 
-func ImageToModel(image image.Image) (*models.Image, error) {
-	imgBytes, err := imageToBytes(image)
-	if err != nil {
-		fmt.Println("Error converting image to bytes:", err)
-		return nil, err
-	}
-	return &models.Image{Data: imgBytes, Name: "test.jpeg"}, nil
+func ImageToModel(image *image.RGBA) (*models.Image, error) {
+	data, err := encodeToJPEG(image, 100)
+	return &models.Image{Data: data, Name: "test.jpeg"}, err
 }
 
-func imageToBytes(img image.Image) ([]byte, error) {
-	buffer := new(bytes.Buffer)
-	if err := jpeg.Encode(buffer, img, nil); err != nil {
+// encodeToJPEG принимает изображение *image.RGBA и качество кодирования от 1 до 100,
+// где большее значение соответствует лучшему качеству и большему размеру файла.
+func encodeToJPEG(rgba *image.RGBA, quality int) ([]byte, error) {
+	var buffer bytes.Buffer
+	err := jpeg.Encode(&buffer, rgba, &jpeg.Options{Quality: quality})
+	if err != nil {
 		return nil, err
 	}
 	return buffer.Bytes(), nil

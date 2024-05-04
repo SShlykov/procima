@@ -8,6 +8,9 @@ import (
 type ServerConfig struct {
 	Addr string `mapstructure:"addr" yaml:"addr"`
 
+	MaxFileSize    int      `mapstructure:"max_file_size" yaml:"max_file_size"`
+	AvailableTypes []string `mapstructure:"available_types" yaml:"available_types"`
+
 	ReadHeaderTimeout time.Duration `mapstructure:"read_header_timeout" yaml:"read_header_timeout"`
 	ReadTimeout       time.Duration `mapstructure:"read_timeout" yaml:"read_timeout"`
 	WriteTimeout      time.Duration `mapstructure:"write_timeout" yaml:"write_timeout"`
