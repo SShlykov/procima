@@ -23,7 +23,7 @@ type ImageController interface {
 //
 //go:generate mockgen -destination=./mocks/mock_image_service.go -package=mocks github.com/SShlykov/procima/procima/internal/integration/http/v1/controller ImageService
 type ImageService interface {
-	ProcessImage(ctx context.Context, request models.RequestImage) (*models.Image, error)
+	ProcessImage(ctx context.Context, request models.RequestImage) (*[]byte, error)
 }
 
 type imageController struct {
@@ -72,11 +72,10 @@ func (ic *imageController) ProcessImage(c *gin.Context) {
 		return
 	}
 
-	ic.logger.Info("image processed", loggerPkg.String("type", imageType), loggerPkg.String("name", image.Name), loggerPkg.Int("size", len(image.Data)))
 	c.Writer.Header().Set("Content-Type", "image/"+imageType)
 	//c.Writer.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", image.Name)) // for download
 	c.Writer.Header().Set("Content-Disposition", "inline") // for display
-	_, _ = c.Writer.Write(image.Data)
+	_, _ = c.Writer.Write(*image)
 }
 
 func (ic *imageController) isAvailable(imageType string) bool {

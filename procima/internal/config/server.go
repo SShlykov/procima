@@ -11,6 +11,8 @@ type ServerConfig struct {
 	MaxFileSize    int      `mapstructure:"max_file_size" yaml:"max_file_size"`
 	AvailableTypes []string `mapstructure:"available_types" yaml:"available_types"`
 
+	LargestSideLimit int `mapstructure:"largest_side_limit" yaml:"largest_side_limit"`
+
 	ReadHeaderTimeout time.Duration `mapstructure:"read_header_timeout" yaml:"read_header_timeout"`
 	ReadTimeout       time.Duration `mapstructure:"read_timeout" yaml:"read_timeout"`
 	WriteTimeout      time.Duration `mapstructure:"write_timeout" yaml:"write_timeout"`

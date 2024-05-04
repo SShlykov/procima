@@ -5,6 +5,7 @@ import (
 	loggerPkg "github.com/SShlykov/procima/go_pkg/logger"
 	"github.com/SShlykov/procima/procima/internal/bootstrap/registry"
 	configPkg "github.com/SShlykov/procima/procima/internal/config"
+	"github.com/SShlykov/procima/procima/internal/domain/processor"
 	"os/signal"
 	"sync"
 	"syscall"
@@ -47,18 +48,27 @@ func (app *App) Run() error {
 
 	app.logger.Info("запуск приложения", loggerPkg.Any("cfg", app.config))
 	app.logger.Debug("включены отладочные сообщения")
+	imageProcessorChan := make(chan processor.ImageProcessorItem)
 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		defer app.cancel()
 		defer app.logger.Info(app.config.AppName + " остановлен")
-		server, err := registry.InitWebServer(app.logger, app.configPath)
+		server, err := registry.InitWebServer(app.logger, app.configPath, imageProcessorChan)
 		if err != nil {
 			app.logger.Error("failed to init web server", loggerPkg.Err(err))
 			return
 		}
 		_ = server.Run(ctx, app.logger)
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		defer app.cancel()
+		defer app.logger.Info("ImageProcessor остановлен")
+		_ = registry.RunImageProcessors(ctx, app.logger, app.configPath, 100, imageProcessorChan)
 	}()
 
 	go func() {

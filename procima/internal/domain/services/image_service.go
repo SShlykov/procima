@@ -3,53 +3,50 @@ package services
 import (
 	"context"
 	loggerPkg "github.com/SShlykov/procima/go_pkg/logger"
+	"github.com/SShlykov/procima/procima/internal/domain/processor"
 	"github.com/SShlykov/procima/procima/internal/models"
-	"github.com/SShlykov/procima/procima/internal/models/adapters"
-	"image"
 	_ "image/jpeg"
+	"time"
 )
 
 // ImageService интерфейс сервиса обработки изображений
 type ImageService interface {
-	ProcessImage(ctx context.Context, request models.RequestImage) (*models.Image, error)
+	ProcessImage(ctx context.Context, request models.RequestImage) (*[]byte, error)
 }
 
 // imageService сервис обработки изображений
 type imageService struct {
-	logger loggerPkg.Logger
+	processorChan chan<- processor.ImageProcessorItem
+	logger        loggerPkg.Logger
 }
 
 // NewImageService создание нового сервиса обработки изображений
-func NewImageService(logger loggerPkg.Logger) ImageService {
-	return &imageService{logger: logger}
+func NewImageService(logger loggerPkg.Logger, processorChan chan<- processor.ImageProcessorItem) ImageService {
+	return &imageService{logger: logger, processorChan: processorChan}
 }
 
 // ProcessImage обработка изображения
-func (is *imageService) ProcessImage(ctx context.Context, request models.RequestImage) (*models.Image, error) {
-	var img *image.RGBA
-	var err error
+func (is *imageService) ProcessImage(ctx context.Context, request models.RequestImage) (*[]byte, error) {
+	var res processor.ImageResult
+	start := time.Now()
 
-	if img, err = base64ToImage(request.Image); err != nil {
+	img, err := base64ToImage(request.Image)
+	if err != nil {
+		is.logger.Error("prepare image", loggerPkg.Err(err))
 		return nil, err
 	}
 
-	for _, r := range request.Operations {
-		switch r {
-		case "rotate:90deg":
-			img = Parallel(img, 8, Rotate90deg)
-		//img = Rotate90deg(img, 0, img.Bounds().Max.X)
-		case "sync_rotate:90deg":
-			img = Rotate90deg(img, 0, img.Bounds().Max.X)
+	chanel := make(chan processor.ImageResult)
+	is.processorChan <- processor.ImageProcessorItem{Img: img, Operation: request.Operation, Channel: chanel}
 
-		//case "recolor:baw": // black and white
-		//	img = recolor(img, colorToBAW)
-		//case "recolor:negative":
-		//	img = recolor(img, colorToNegative)
-		default:
-			is.logger.Warn("unknown operation", loggerPkg.Any("operation", r))
-			return nil, ErrorUnknownOperation
-		}
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	case res = <-chanel:
+		close(chanel)
 	}
 
-	return adapters.ImageToModel(img)
+	is.logger.Debug("operations", loggerPkg.Any("latency", time.Since(start).Truncate(time.Millisecond).String()))
+
+	return res.Res, res.Err
 }
