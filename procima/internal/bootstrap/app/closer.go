@@ -5,12 +5,16 @@ import (
 	"time"
 )
 
+const (
+	TerminateTimeout = 10 * time.Second
+)
+
 func (app *App) closer(ctx context.Context, stoppedChan <-chan struct{}) error {
 	<-ctx.Done()
 
 	app.logger.Info("Остановка приложения")
 
-	timeoutCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	timeoutCtx, cancel := context.WithTimeout(context.Background(), TerminateTimeout)
 	defer cancel()
 
 	select {

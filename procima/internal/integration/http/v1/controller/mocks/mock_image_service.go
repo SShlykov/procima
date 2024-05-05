@@ -41,10 +41,10 @@ func (m *MockImageService) EXPECT() *MockImageServiceMockRecorder {
 }
 
 // ProcessImage mocks base method.
-func (m *MockImageService) ProcessImage(arg0 context.Context, arg1 models.RequestImage) (*models.Image, error) {
+func (m *MockImageService) ProcessImage(arg0 context.Context, arg1 models.RequestImage) (*[]byte, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ProcessImage", arg0, arg1)
-	ret0, _ := ret[0].(*models.Image)
+	ret0, _ := ret[0].(*[]byte)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

@@ -68,7 +68,7 @@ func (app *App) Run() error {
 		defer wg.Done()
 		defer app.cancel()
 		defer app.logger.Info("ImageProcessor остановлен")
-		_ = registry.RunImageProcessors(ctx, app.logger, app.configPath, 100, imageProcessorChan)
+		_ = registry.RunImageProcessors(ctx, app.logger, app.configPath, app.config.Connections, imageProcessorChan)
 	}()
 
 	go func() {

@@ -5,9 +5,10 @@ import (
 )
 
 type Config struct {
-	AppName string `mapstructure:"app_name" yaml:"app_name"`
-	Host    string `mapstructure:"host" yaml:"host"`
-	Logger  Logger `mapstructure:"logger" yaml:"logger"`
+	AppName     string `mapstructure:"app_name" yaml:"app_name"`
+	Host        string `mapstructure:"host" yaml:"host"`
+	Connections int    `mapstructure:"connections" yaml:"connections"`
+	Logger      Logger `mapstructure:"logger" yaml:"logger"`
 }
 type Logger struct {
 	Level string `mapstructure:"level" yaml:"level"`

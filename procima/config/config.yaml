@@ -1,5 +1,6 @@
 app_name: "procima"
 host: 0.0.0.0
+connections: 100
 
 logger:
   level: debug # 'debug', 'info', 'warn', 'error'

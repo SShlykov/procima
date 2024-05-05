@@ -73,8 +73,7 @@ func (ic *imageController) ProcessImage(c *gin.Context) {
 	}
 
 	c.Writer.Header().Set("Content-Type", "image/"+imageType)
-	//c.Writer.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", image.Name)) // for download
-	c.Writer.Header().Set("Content-Disposition", "inline") // for display
+	c.Writer.Header().Set("Content-Disposition", "inline")
 	_, _ = c.Writer.Write(*image)
 }
 
@@ -87,11 +86,13 @@ func (ic *imageController) isAvailable(imageType string) bool {
 	return false
 }
 
+const PartsWhenImage = 2
+
 func getImageType(dataURL string) (string, bool) {
 	re := regexp.MustCompile(`^data:image/([^;]+);base64,`)
 	matches := re.FindStringSubmatch(dataURL[:50])
 
-	if len(matches) == 2 {
+	if len(matches) == PartsWhenImage {
 		return matches[1], true
 	}
 	return "", false

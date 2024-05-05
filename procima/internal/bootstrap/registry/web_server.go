@@ -13,7 +13,8 @@ import (
 	"net/http"
 )
 
-func InitWebServer(logger loggerPkg.Logger, configPath string, processorChan chan<- processor.ImageProcessorItem) (*endpoint.WebServer, error) {
+func InitWebServer(logger loggerPkg.Logger, configPath string,
+	processorChan chan<- processor.ImageProcessorItem) (*endpoint.WebServer, error) {
 	cfg, err := config.LoadServerConfig(configPath)
 	if err != nil {
 		return nil, errors.New("failed to load server config: " + err.Error())
@@ -38,7 +39,8 @@ func InitWebServer(logger loggerPkg.Logger, configPath string, processorChan cha
 	return &endpoint.WebServer{Server: srv, Config: cfg}, nil
 }
 
-func SetRouter(engine *gin.Engine, logger loggerPkg.Logger, serverConfig *config.ServerConfig, processorChan chan<- processor.ImageProcessorItem) {
+func SetRouter(engine *gin.Engine, logger loggerPkg.Logger, serverConfig *config.ServerConfig,
+	processorChan chan<- processor.ImageProcessorItem) {
 	imageController := initImageController(logger, serverConfig, processorChan)
 
 	routers :=
@@ -51,7 +53,8 @@ func SetRouter(engine *gin.Engine, logger loggerPkg.Logger, serverConfig *config
 	}
 }
 
-func initImageController(logger loggerPkg.Logger, serverConfig *config.ServerConfig, processorChan chan<- processor.ImageProcessorItem) cntr.ImageController {
+func initImageController(logger loggerPkg.Logger, serverConfig *config.ServerConfig,
+	processorChan chan<- processor.ImageProcessorItem) cntr.ImageController {
 	service := services.NewImageService(logger, processorChan)
 	controller := cntr.NewImageController(service, logger, serverConfig.AvailableTypes, serverConfig.MaxFileSize)
 	return controller

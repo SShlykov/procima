@@ -5,7 +5,7 @@ import (
 )
 
 // Parallel обрабатывает задачи в procs несколько потоков
-func Parallel(start, stop int, procs int, fn func(<-chan int)) {
+func Parallel(start, stop, procs int, fn func(<-chan int)) {
 	count := stop - start
 	if count < 1 {
 		return
