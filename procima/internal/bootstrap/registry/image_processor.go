@@ -2,13 +2,14 @@ package registry
 
 import (
 	"context"
-	loggerPkg "github.com/SShlykov/procima/go_pkg/logger"
 	"github.com/SShlykov/procima/procima/internal/config"
 	"github.com/SShlykov/procima/procima/internal/domain/processor"
+	loggerPkg "github.com/SShlykov/procima/procima/pkg/logger"
+	"github.com/SShlykov/procima/procima/pkg/metrics"
 	"sync"
 )
 
-func RunImageProcessors(ctx context.Context, logger loggerPkg.Logger, configPath string, routines int,
+func RunImageProcessors(ctx context.Context, logger loggerPkg.Logger, configPath string, routines int, metr metrics.Metrics,
 	imageProcessorChan <-chan processor.ImageProcessorItem) error {
 	cfg, err := config.LoadProcessorConfig(configPath)
 	if err != nil {
@@ -21,7 +22,7 @@ func RunImageProcessors(ctx context.Context, logger loggerPkg.Logger, configPath
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			processor.Run(ctx, logger, cfg.LargestSideLimit, imageProcessorChan)
+			processor.Run(ctx, logger, cfg.LargestSideLimit, metr, imageProcessorChan)
 		}()
 	}
 	wg.Wait()

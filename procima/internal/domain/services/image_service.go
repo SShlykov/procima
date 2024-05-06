@@ -2,9 +2,9 @@ package services
 
 import (
 	"context"
-	loggerPkg "github.com/SShlykov/procima/go_pkg/logger"
 	"github.com/SShlykov/procima/procima/internal/domain/processor"
 	"github.com/SShlykov/procima/procima/internal/models"
+	loggerPkg "github.com/SShlykov/procima/procima/pkg/logger"
 	_ "image/jpeg"
 	"time"
 )

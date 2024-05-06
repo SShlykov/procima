@@ -1,0 +1,9 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'procima'
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['procima:8080']
+    metrics_path: '/api/metrics'

@@ -2,18 +2,19 @@ package registry
 
 import (
 	"errors"
-	loggerPkg "github.com/SShlykov/procima/go_pkg/logger"
 	"github.com/SShlykov/procima/procima/internal/config"
 	"github.com/SShlykov/procima/procima/internal/domain/processor"
 	"github.com/SShlykov/procima/procima/internal/domain/services"
 	"github.com/SShlykov/procima/procima/internal/integration/http/endpoint"
 	cntr "github.com/SShlykov/procima/procima/internal/integration/http/v1/controller"
 	"github.com/SShlykov/procima/procima/internal/integration/http/v1/router"
+	loggerPkg "github.com/SShlykov/procima/procima/pkg/logger"
+	"github.com/SShlykov/procima/procima/pkg/metrics"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
-func InitWebServer(logger loggerPkg.Logger, configPath string,
+func InitWebServer(logger loggerPkg.Logger, configPath string, metr metrics.Metrics,
 	processorChan chan<- processor.ImageProcessorItem) (*endpoint.WebServer, error) {
 	cfg, err := config.LoadServerConfig(configPath)
 	if err != nil {
@@ -24,7 +25,7 @@ func InitWebServer(logger loggerPkg.Logger, configPath string,
 	engine := gin.New()
 	engine.Use(gin.Recovery())
 
-	SetRouter(engine, logger, cfg, processorChan)
+	SetRouter(engine, logger, cfg, metr, processorChan)
 
 	srv := &http.Server{
 		ReadHeaderTimeout: cfg.ReadHeaderTimeout,
@@ -39,13 +40,14 @@ func InitWebServer(logger loggerPkg.Logger, configPath string,
 	return &endpoint.WebServer{Server: srv, Config: cfg}, nil
 }
 
-func SetRouter(engine *gin.Engine, logger loggerPkg.Logger, serverConfig *config.ServerConfig,
+func SetRouter(engine *gin.Engine, logger loggerPkg.Logger, serverConfig *config.ServerConfig, metr metrics.Metrics,
 	processorChan chan<- processor.ImageProcessorItem) {
 	imageController := initImageController(logger, serverConfig, processorChan)
 
 	routers :=
 		[]func(engine *gin.Engine, logger loggerPkg.Logger){
-			router.ImageRouter(imageController),
+			router.ImageRouter(imageController, metr),
+			router.MetricsRouter(metr),
 		}
 
 	for _, routes := range routers {

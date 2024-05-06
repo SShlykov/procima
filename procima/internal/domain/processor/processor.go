@@ -3,10 +3,12 @@ package processor
 import (
 	"context"
 	"errors"
-	loggerPkg "github.com/SShlykov/procima/go_pkg/logger"
 	"github.com/SShlykov/procima/procima/internal/models/adapters"
+	loggerPkg "github.com/SShlykov/procima/procima/pkg/logger"
+	"github.com/SShlykov/procima/procima/pkg/metrics"
 	"github.com/nfnt/resize"
 	"image"
+	"time"
 )
 
 type ImageProcessorItem struct {
@@ -20,13 +22,15 @@ type ImageResult struct {
 	Res *[]byte
 }
 
-func Run(ctx context.Context, logger loggerPkg.Logger, largestSideLimit int, procChan <-chan ImageProcessorItem) {
+func Run(ctx context.Context, logger loggerPkg.Logger, largestSideLimit int,
+	metrics metrics.Metrics, procChan <-chan ImageProcessorItem) {
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case item := <-procChan:
 			img := item.Img
+			start := time.Now()
 
 			if largestSideLimit > 0 {
 				initX, initY := img.Bounds().Max.X, img.Bounds().Max.Y
@@ -42,15 +46,16 @@ func Run(ctx context.Context, logger loggerPkg.Logger, largestSideLimit int, pro
 			var err error
 			switch item.Operation {
 			case "rotate:90deg":
-				img = Rotate90(item.Img)
+				img = Rotate90(img)
 			case "recolor:grayscale":
-				img = GrayScale(item.Img)
+				img = GrayScale(img)
 			case "recolor:negative":
-				img = Negative(item.Img)
+				img = Negative(img)
 			default:
 				logger.Warn("unknown operation", loggerPkg.Any("operation", item.Operation))
 				err = errors.New("unknown operation")
 			}
+			metrics.ImageParseDuration(float64(time.Since(start).Milliseconds()))
 
 			res := ImageResult{}
 			if err != nil {

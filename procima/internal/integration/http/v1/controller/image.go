@@ -3,10 +3,10 @@ package controller
 import (
 	"context"
 	errorsPkg "errors"
-	loggerPkg "github.com/SShlykov/procima/go_pkg/logger"
 	"github.com/SShlykov/procima/procima/internal/domain/services"
 	"github.com/SShlykov/procima/procima/internal/integration/http/v1/errors"
 	"github.com/SShlykov/procima/procima/internal/models"
+	loggerPkg "github.com/SShlykov/procima/procima/pkg/logger"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"regexp"

@@ -2,7 +2,7 @@ package app
 
 import (
 	"errors"
-	loggerPkg "github.com/SShlykov/procima/go_pkg/logger"
+	loggerPkg "github.com/SShlykov/procima/procima/pkg/logger"
 )
 
 func (app *App) initLogger() error {

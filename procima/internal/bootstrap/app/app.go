@@ -2,10 +2,11 @@ package app
 
 import (
 	"context"
-	loggerPkg "github.com/SShlykov/procima/go_pkg/logger"
 	"github.com/SShlykov/procima/procima/internal/bootstrap/registry"
 	configPkg "github.com/SShlykov/procima/procima/internal/config"
 	"github.com/SShlykov/procima/procima/internal/domain/processor"
+	loggerPkg "github.com/SShlykov/procima/procima/pkg/logger"
+	"github.com/SShlykov/procima/procima/pkg/metrics"
 	"os/signal"
 	"sync"
 	"syscall"
@@ -19,6 +20,8 @@ type App struct {
 
 	logger loggerPkg.Logger
 	config *configPkg.Config
+
+	metric metrics.Metrics
 }
 
 func New(configPath string) (*App, error) {
@@ -28,6 +31,7 @@ func New(configPath string) (*App, error) {
 	inits := []func() error{
 		app.initConfig,
 		app.initLogger,
+		app.initMetrics,
 	}
 
 	for _, init := range inits {
@@ -55,7 +59,7 @@ func (app *App) Run() error {
 		defer wg.Done()
 		defer app.cancel()
 		defer app.logger.Info(app.config.AppName + " остановлен")
-		server, err := registry.InitWebServer(app.logger, app.configPath, imageProcessorChan)
+		server, err := registry.InitWebServer(app.logger, app.configPath, app.metric, imageProcessorChan)
 		if err != nil {
 			app.logger.Error("failed to init web server", loggerPkg.Err(err))
 			return
@@ -68,7 +72,7 @@ func (app *App) Run() error {
 		defer wg.Done()
 		defer app.cancel()
 		defer app.logger.Info("ImageProcessor остановлен")
-		_ = registry.RunImageProcessors(ctx, app.logger, app.configPath, app.config.Connections, imageProcessorChan)
+		_ = registry.RunImageProcessors(ctx, app.logger, app.configPath, app.config.Connections, app.metric, imageProcessorChan)
 	}()
 
 	go func() {

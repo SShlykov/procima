@@ -2,7 +2,7 @@ package processor
 
 import (
 	"context"
-	loggerPkg "github.com/SShlykov/procima/go_pkg/logger"
+	loggerPkg "github.com/SShlykov/procima/procima/pkg/logger"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/goleak"
 	"image"
