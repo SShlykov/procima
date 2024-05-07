@@ -1,0 +1,15 @@
+name: echo
+on:
+  - push
+  - pull_request
+
+jobs:
+  echo:
+    name: echo
+    runs-on: ubuntu-latests
+    steps:
+      - uses: actions/checkout@v3
+      - name: echo
+        run: |
+          echo "runner started"
+          ls -la
