@@ -8,6 +8,8 @@ import (
 	"time"
 )
 
+const METRICS_TIMEOUT = 10 * time.Second
+
 func (app *App) initMetrics() error {
 	key := "procima"
 
@@ -71,7 +73,7 @@ func (app *App) RunMetrics() error {
 				app.metric.AddCPUUsage(percentages[0])
 			}
 
-			time.Sleep(10 * time.Second)
+			time.Sleep(METRICS_TIMEOUT)
 		}
 	}
 }
