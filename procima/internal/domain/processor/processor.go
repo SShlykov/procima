@@ -5,11 +5,14 @@ import (
 	"errors"
 	"github.com/SShlykov/procima/procima/internal/models/adapters"
 	loggerPkg "github.com/SShlykov/procima/procima/pkg/logger"
-	"github.com/SShlykov/procima/procima/pkg/metrics"
 	"github.com/nfnt/resize"
 	"image"
 	"time"
 )
+
+type Metrics interface {
+	ImageParseDuration(duration float64)
+}
 
 type ImageProcessorItem struct {
 	Channel   chan<- ImageResult
@@ -23,7 +26,7 @@ type ImageResult struct {
 }
 
 func Run(ctx context.Context, logger loggerPkg.Logger, largestSideLimit int,
-	metrics metrics.Metrics, procChan <-chan ImageProcessorItem) {
+	metrics Metrics, procChan <-chan ImageProcessorItem) {
 	for {
 		select {
 		case <-ctx.Done():
