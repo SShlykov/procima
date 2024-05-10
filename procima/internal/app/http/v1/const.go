@@ -1,7 +1,7 @@
-package router
+package v1
 
 const (
-	MetricsURL     = "/api/metrics"
+	MetricsURL     = "/metrics"
 	BaseURL        = "/api/v1"
 	ImageURL       = "/images"
 	ImageUploadURL = ImageURL + UPLOAD

@@ -1,4 +1,4 @@
-package errors
+package images
 
 const (
 	ErrorBadRequest       = "bad request"

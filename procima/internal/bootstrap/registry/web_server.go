@@ -2,20 +2,20 @@ package registry
 
 import (
 	"errors"
+	"github.com/SShlykov/procima/procima/internal/app/http/endpoint"
+	"github.com/SShlykov/procima/procima/internal/app/http/middleware"
+	v1 "github.com/SShlykov/procima/procima/internal/app/http/v1"
+	cntr "github.com/SShlykov/procima/procima/internal/app/http/v1/images"
+	metrics2 "github.com/SShlykov/procima/procima/internal/app/http/v1/metrics"
 	"github.com/SShlykov/procima/procima/internal/config"
-	"github.com/SShlykov/procima/procima/internal/domain/processor"
 	"github.com/SShlykov/procima/procima/internal/domain/services"
-	"github.com/SShlykov/procima/procima/internal/integration/http/endpoint"
-	cntr "github.com/SShlykov/procima/procima/internal/integration/http/v1/controller"
-	"github.com/SShlykov/procima/procima/internal/integration/http/v1/router"
 	loggerPkg "github.com/SShlykov/procima/procima/pkg/logger"
 	"github.com/SShlykov/procima/procima/pkg/metrics"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
-func InitWebServer(logger loggerPkg.Logger, configPath string, metr metrics.Metrics,
-	processorChan chan<- processor.ImageProcessorItem) (*endpoint.WebServer, error) {
+func InitWebServer(logger loggerPkg.Logger, configPath string, metr metrics.Metrics, imgService services.ImageService) (*endpoint.WebServer, error) {
 	cfg, err := config.LoadServerConfig(configPath)
 	if err != nil {
 		return nil, errors.New("failed to load server config: " + err.Error())
@@ -24,40 +24,30 @@ func InitWebServer(logger loggerPkg.Logger, configPath string, metr metrics.Metr
 	gin.SetMode(gin.ReleaseMode)
 	engine := gin.New()
 	engine.Use(gin.Recovery())
+	engine.Use(middleware.Metrics(logger, metr))
+	group := engine.Group(v1.BaseURL)
 
-	SetRouter(engine, logger, cfg, metr, processorChan)
+	metrContr := metrics2.NewMetricsController(metr)
+	metrContr.RegisterRoutes(group)
 
+	imgCntr := cntr.NewImageController(imgService, logger, cfg.AvailableTypes, cfg.MaxFileSize)
+	imgCntr.RegisterRoutes(group)
+
+	webSever := configToWebServer(cfg)
+	webSever.Server.Handler = engine
+
+	return webSever, nil
+}
+
+func configToWebServer(cfg *config.ServerConfig) *endpoint.WebServer {
 	srv := &http.Server{
 		ReadHeaderTimeout: cfg.ReadHeaderTimeout,
 		ReadTimeout:       cfg.ReadTimeout,
 		WriteTimeout:      cfg.WriteTimeout,
 		IdleTimeout:       cfg.IddleTimeout,
 
-		Addr:    cfg.Addr,
-		Handler: engine,
+		Addr: cfg.Addr,
 	}
 
-	return &endpoint.WebServer{Server: srv, Config: cfg}, nil
-}
-
-func SetRouter(engine *gin.Engine, logger loggerPkg.Logger, serverConfig *config.ServerConfig, metr metrics.Metrics,
-	processorChan chan<- processor.ImageProcessorItem) {
-	imageController := initImageController(logger, serverConfig, processorChan)
-
-	routers :=
-		[]func(engine *gin.Engine, logger loggerPkg.Logger){
-			router.ImageRouter(imageController, metr),
-			router.MetricsRouter(metr),
-		}
-
-	for _, routes := range routers {
-		routes(engine, logger)
-	}
-}
-
-func initImageController(logger loggerPkg.Logger, serverConfig *config.ServerConfig,
-	processorChan chan<- processor.ImageProcessorItem) cntr.ImageController {
-	service := services.NewImageService(logger, processorChan)
-	controller := cntr.NewImageController(service, logger, serverConfig.AvailableTypes, serverConfig.MaxFileSize)
-	return controller
+	return &endpoint.WebServer{Server: srv, Config: cfg}
 }

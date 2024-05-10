@@ -1,27 +1,26 @@
-package controller
+package images
 
 import (
 	"context"
 	errorsPkg "errors"
 	"github.com/SShlykov/procima/procima/internal/domain/services"
-	"github.com/SShlykov/procima/procima/internal/integration/http/v1/errors"
 	"github.com/SShlykov/procima/procima/internal/models"
 	loggerPkg "github.com/SShlykov/procima/procima/pkg/logger"
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"regexp"
 )
 
 // ImageController контроллер для обработки изображений
 //
-//go:generate mockgen -destination=./mocks/mock_image_controller.go -package=mocks github.com/SShlykov/procima/procima/internal/integration/http/v1/controller ImageController
+//go:generate mockgen -destination=./mocks/mock_image_controller.go -package=mocks github.com/SShlykov/procima/procima/internal/app/http/v1/controller ImageController
 type ImageController interface {
+	RegisterRoutes(router *gin.RouterGroup)
 	ProcessImage(c *gin.Context)
 }
 
 // ImageService сервис для обработки изображений
 //
-//go:generate mockgen -destination=./mocks/mock_image_service.go -package=mocks github.com/SShlykov/procima/procima/internal/integration/http/v1/controller ImageService
+//go:generate mockgen -destination=./mocks/mock_image_service.go -package=mocks github.com/SShlykov/procima/procima/internal/app/http/v1/controller ImageService
 type ImageService interface {
 	ProcessImage(ctx context.Context, request models.RequestImage) (*[]byte, error)
 }
@@ -42,21 +41,21 @@ func (ic *imageController) ProcessImage(c *gin.Context) {
 
 	var request models.RequestImage
 	if err := c.BindJSON(&request); err != nil {
-		ic.logger.Error(errors.ErrorBadRequest, loggerPkg.Err(err))
-		c.JSON(http.StatusBadRequest, gin.H{"error": errors.ErrorBadRequest})
+		ic.logger.Error(ErrorBadRequest, loggerPkg.Err(err))
+		c.JSON(http.StatusBadRequest, gin.H{"error": ErrorBadRequest})
 		return
 	}
 
 	if len(request.Image) > ic.fileSizeLimit {
-		ic.logger.Error(errors.ErrorBadRequest, loggerPkg.String("error", errors.ErrorExcededFileSize))
-		c.JSON(http.StatusBadRequest, gin.H{"error": errors.ErrorExcededFileSize, "limit": ic.fileSizeLimit, "actual": len(request.Image)})
+		ic.logger.Error(ErrorBadRequest, loggerPkg.String("error", ErrorExcededFileSize))
+		c.JSON(http.StatusBadRequest, gin.H{"error": ErrorExcededFileSize, "limit": ic.fileSizeLimit, "actual": len(request.Image)})
 		return
 	}
 
 	imageType, found := getImageType(request.Image)
 	if !found || !ic.isAvailable(imageType) {
-		ic.logger.Error(errors.ErrorBadRequest, loggerPkg.String("error", errors.ErrorInvalidImageType))
-		c.JSON(http.StatusBadRequest, gin.H{"error": errors.ErrorInvalidImageType, "available": ic.availableImageTypes, "actual": imageType})
+		ic.logger.Error(ErrorBadRequest, loggerPkg.String("error", ErrorInvalidImageType))
+		c.JSON(http.StatusBadRequest, gin.H{"error": ErrorInvalidImageType, "available": ic.availableImageTypes, "actual": imageType})
 		return
 	}
 
@@ -68,7 +67,7 @@ func (ic *imageController) ProcessImage(c *gin.Context) {
 			return
 		}
 
-		c.JSON(http.StatusInternalServerError, gin.H{"error": errors.ErrorInternal})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": ErrorInternal})
 		return
 	}
 
@@ -84,16 +83,4 @@ func (ic *imageController) isAvailable(imageType string) bool {
 		}
 	}
 	return false
-}
-
-const PartsWhenImage = 2
-
-func getImageType(dataURL string) (string, bool) {
-	re := regexp.MustCompile(`^data:image/([^;]+);base64,`)
-	matches := re.FindStringSubmatch(dataURL[:50])
-
-	if len(matches) == PartsWhenImage {
-		return matches[1], true
-	}
-	return "", false
 }
