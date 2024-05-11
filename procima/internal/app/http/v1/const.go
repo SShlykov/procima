@@ -1,9 +1,9 @@
 package v1
 
 const (
-	MetricsURL     = "/metrics"
 	BaseURL        = "/api/v1"
 	ImageURL       = "/images"
+	MetricsURL     = "/metrics"
 	ImageUploadURL = ImageURL + UPLOAD
 
 	UPLOAD = ":upload"

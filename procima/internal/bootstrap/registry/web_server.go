@@ -15,7 +15,8 @@ import (
 	"net/http"
 )
 
-func InitWebServer(logger loggerPkg.Logger, configPath string, metr metrics.Metrics, imgService services.ImageService) (*endpoint.WebServer, error) {
+func InitWebServer(logger loggerPkg.Logger, configPath string, metr metrics.Metrics,
+	imgService services.ImageService) (*endpoint.WebServer, error) {
 	cfg, err := config.LoadServerConfig(configPath)
 	if err != nil {
 		return nil, errors.New("failed to load server config: " + err.Error())

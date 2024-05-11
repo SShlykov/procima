@@ -6,5 +6,5 @@ import (
 )
 
 func (mc *metricsController) RegisterRoutes(router *gin.RouterGroup) {
-	router.POST(v1.ImageUploadURL, mc.PrometheusHandler)
+	router.POST(v1.MetricsURL, mc.PrometheusHandler)
 }
