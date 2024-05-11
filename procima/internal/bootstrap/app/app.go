@@ -6,8 +6,8 @@ import (
 	configPkg "github.com/SShlykov/procima/procima/internal/config"
 	"github.com/SShlykov/procima/procima/internal/domain/processor"
 	"github.com/SShlykov/procima/procima/internal/domain/services"
+	"github.com/SShlykov/procima/procima/internal/metrics"
 	loggerPkg "github.com/SShlykov/procima/procima/pkg/logger"
-	"github.com/SShlykov/procima/procima/pkg/metrics"
 	"os/signal"
 	"sync"
 	"syscall"
@@ -76,6 +76,13 @@ func (app *App) Run() error {
 		defer app.cancel()
 		defer app.logger.Info("ImageProcessor остановлен")
 		_ = registry.RunImageProcessors(ctx, app.logger, app.configPath, app.config.Connections, app.metric, imageProcessorChan)
+	}()
+
+	go func() {
+		defer wg.Done()
+		defer app.cancel()
+		defer app.logger.Info("Сбор метрик остановлен")
+		_ = app.RunMetrics()
 	}()
 
 	go func() {

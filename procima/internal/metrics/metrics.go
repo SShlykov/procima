@@ -23,8 +23,13 @@ type metrics struct {
 
 func NewMetrics(counter prometheus.Counter, responseDuration prometheus.Histogram,
 	imageParseDuration prometheus.Histogram, memoryUsage prometheus.Counter, cpuUsage prometheus.Counter) Metrics {
-	return &metrics{counter: counter, responseDuration: responseDuration, imageParseDuration: imageParseDuration,
-		memoryUsage: memoryUsage, cpuUsage: cpuUsage}
+	return &metrics{
+		counter:            counter,
+		responseDuration:   responseDuration,
+		imageParseDuration: imageParseDuration,
+		memoryUsage:        memoryUsage,
+		cpuUsage:           cpuUsage,
+	}
 }
 
 func (m *metrics) Register(reg *prometheus.Registry) {

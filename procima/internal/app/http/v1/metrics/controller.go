@@ -1,7 +1,7 @@
 package metrics
 
 import (
-	"github.com/SShlykov/procima/procima/pkg/metrics"
+	"github.com/SShlykov/procima/procima/internal/metrics"
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"

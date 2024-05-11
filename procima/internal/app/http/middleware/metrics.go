@@ -1,8 +1,8 @@
 package middleware
 
 import (
+	"github.com/SShlykov/procima/procima/internal/metrics"
 	loggerPkg "github.com/SShlykov/procima/procima/pkg/logger"
-	"github.com/SShlykov/procima/procima/pkg/metrics"
 	"github.com/gin-gonic/gin"
 	"time"
 )

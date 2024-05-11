@@ -4,8 +4,8 @@ import (
 	"context"
 	"github.com/SShlykov/procima/procima/internal/config"
 	"github.com/SShlykov/procima/procima/internal/domain/processor"
+	"github.com/SShlykov/procima/procima/internal/metrics"
 	loggerPkg "github.com/SShlykov/procima/procima/pkg/logger"
-	"github.com/SShlykov/procima/procima/pkg/metrics"
 	"sync"
 )
 

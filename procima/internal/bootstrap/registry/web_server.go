@@ -9,8 +9,8 @@ import (
 	metrics2 "github.com/SShlykov/procima/procima/internal/app/http/v1/metrics"
 	"github.com/SShlykov/procima/procima/internal/config"
 	"github.com/SShlykov/procima/procima/internal/domain/services"
+	"github.com/SShlykov/procima/procima/internal/metrics"
 	loggerPkg "github.com/SShlykov/procima/procima/pkg/logger"
-	"github.com/SShlykov/procima/procima/pkg/metrics"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
